@@ -1,5 +1,5 @@
 type ProductId = string;
-type ProductGroup = 'clothing' | 'climbing' | 'cycling';
+export type ProductGroup = 'clothing' | 'climbing' | 'cycling';
 type Subcategory = string;
 type Category = string;
 
@@ -14,7 +14,6 @@ export interface ProductsRecord {
     sizesAvailable?: {
         sizeCode:number,
         displayValue:string
-    }
+    }[]
 }
 
-export type Passenger = any;
