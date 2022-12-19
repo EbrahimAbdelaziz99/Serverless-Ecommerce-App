@@ -1,13 +1,14 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { formatJSONResponse } from '@libs/APIResponses';
 import Dynamo from '@libs/Dynamo';
+import { ProductsRecord } from 'src/types/dynamo';
 
 export const handler = async (event: APIGatewayProxyEvent) => {
   try {
 
     const productTable = process.env.productTable
     
-    const { group, category, subcategory } = event.queryStringParameters;
+    const { group, category, subcategory } = event.queryStringParameters || {};
     
     if (!group) {
       return formatJSONResponse({
@@ -25,14 +26,17 @@ export const handler = async (event: APIGatewayProxyEvent) => {
         }
     }
 
-    const productsResponse = await Dynamo.query({
+    const productsResponse = await Dynamo.query<ProductsRecord>({
       tableName: productTable,
       index:'index1',
       pkValue:group,
-      skBeginsWith: sk
+      skBeginsWith: sk,
+      skKey:sk ? 'sk' : undefined,
     })
 
-    return formatJSONResponse({ body: {} });
+    const productData = productsResponse.map(({pk,sk,...rest}) => rest );
+
+    return formatJSONResponse({ body: productData });
   } catch (error) {
     console.error(error);
     return formatJSONResponse({ statusCode: 500, body: error.message });
