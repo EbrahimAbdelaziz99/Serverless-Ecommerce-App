@@ -38,7 +38,7 @@ const batch = async ({
     profile,
   });
   const config = {
-    region: 'eu-central-1',
+    region: 'me-south-1',
     convertEmptyValues: true,
   };
 

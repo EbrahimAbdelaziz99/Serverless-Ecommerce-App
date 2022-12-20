@@ -8,7 +8,7 @@ const serverlessConfiguration: AWS = {
   service: 'ecom-app',
   frameworkVersion: '3',
 
-  plugins: ['serverless-esbuild'],
+  plugins: ['serverless-esbuild','serverless-iam-roles-per-function'],
   custom: {
     tables: {
       productTable: '${sls:stage}-${self:service}-product-table',
@@ -19,6 +19,8 @@ const serverlessConfiguration: AWS = {
       int: 'int-profile',
       prod: 'prod-profile',
     },
+
+    eventBridgeBusName: 'ordersEventBus',
 
     esbuild: {
       bundle: true,
@@ -35,7 +37,7 @@ const serverlessConfiguration: AWS = {
     name: 'aws',
     runtime: 'nodejs16.x',
     profile: '${self:custom.profile.${sls:stage}}',
-    region: 'eu-central-1',
+    region: 'me-south-1',
     apiGateway: {
       minimumCompressionSize: 1024,
       shouldStartNameWithService: true,
@@ -45,17 +47,18 @@ const serverlessConfiguration: AWS = {
       productTable: '${self:custom.tables.productTable}',
       ordersTable: '${self:custom.tables.ordersTable}',
       region: '${self:provider.region}',
+      eventBridgeBusName: '${self:custom.eventBridgeBusName}',
     },
-    iam:{
+    iam: {
       role: {
         statements: [
           {
-            Effect:'Allow',
-            Action:'dynamodb:*',
-            Resource:'*'
-          }
-        ]
-      }
+            Effect: 'Allow',
+            Action: 'dynamodb:*',
+            Resource: '*',
+          },
+        ],
+      },
     },
   },
   functions,
