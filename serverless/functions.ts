@@ -70,27 +70,70 @@ const functions: AWS['functions'] = {
     handler: 'src/functions/streamHandler/index.handler',
     events: [
       {
-        stream:{
-          type:'dynamodb',
-          arn:{
-            'Fn::GetAtt':['OrdersTable','StreamArn']
-          }
-        }
-      }
+        stream: {
+          type: 'dynamodb',
+          arn: {
+            'Fn::GetAtt': ['OrdersTable', 'StreamArn'],
+          },
+        },
+      },
     ],
     //@ts-expect-error
-    iam: {
-      role: {
-        statements: [
-          {
-            Effect: 'Allow',
-            Action: 'events:PutEvents',
-            Resource: 'arn:aws:events:${self:provider.region}:${aws:accountId}:event-bus/${self:custom.eventBridgeBusName}',
-          },
-        ],
+    iamRoleStatements: [
+      {
+        Effect: 'Allow',
+        Action: 'events:PutEvents',
+        Resource:
+          'arn:aws:events:${self:provider.region}:${aws:accountId}:event-bus/${self:custom.eventBridgeBusName}',
       },
-    },
+    ]
   },
+  ebOrderPlacedNotification: {
+    handler: 'src/functions/ebOrderPlacedNotification/index.handler',
+    events: [
+      {
+        eventBridge: {
+          eventBus: '${self:custom.eventBridgeBusName}',
+          pattern: {
+            source: ['order.placed'],
+          },
+        },
+      },
+    ],
+    //@ts-expect-error
+    iamRoleStatementsInherit: true,
+    iamRoleStatements: [
+      {
+        Effect: 'Allow',
+        Action: 'ses:sendEmail',
+        Resource: '*',
+      },
+    ],
+  },
+  ebOrderPlacedPicklist: {
+    handler: 'src/functions/ebOrderPlacedPicklist/index.handler',
+    events: [
+      {
+        eventBridge: {
+          eventBus: '${self:custom.eventBridgeBusName}',
+          pattern: {
+            source: ['order.picked'],
+          },
+        },
+      },
+    ],
+    //@ts-expect-error
+    // iamRoleStatementsInherit: true,
+    iamRoleStatements: [
+      {
+        Effect: 'Allow',
+        Action: ['secretsmanager:GetSecretValue'],
+        Resource: '*',
+      },
+    ],
+  },
+
+
 };
 
 export default functions;

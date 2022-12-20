@@ -14,7 +14,7 @@ export const sendEmail = async ({
   html?: string;
 }) => {
   const params: SendEmailCommandInput = {
-    Source: 'sam@completecoding.io',
+    Source: 'ebrahim.abdelaziz@adzily.com',
     Destination: {
       ToAddresses: [email],
     },
