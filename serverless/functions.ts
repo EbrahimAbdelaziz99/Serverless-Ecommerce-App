@@ -142,6 +142,22 @@ const functions: AWS['functions'] = {
     iamRoleStatementsInherit: true,
     iamRoleStatements: [iamGetSecret],
   },
+  ebOrderPackedNotification: {
+    handler: 'src/functions/ebOrderPackedNotification/index.handler',
+    events: [
+      {
+        eventBridge: {
+          eventBus: '${self:custom.eventBridgeBusName}',
+          pattern: {
+            source: ['order.packed'],
+          },
+        },
+      },
+    ],
+    //@ts-expect-error
+    iamRoleStatementsInherit: true,
+    iamRoleStatements: [iamGetSecret],
+  },
 };
 
 export default functions;
