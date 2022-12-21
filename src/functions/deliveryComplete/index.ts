@@ -1,20 +1,32 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { formatJSONResponse } from '@libs/APIResponses';
-import Authorization from '@libs/Authorization';
 import Dynamo from '@libs/Dynamo';
 
+const secrets:Record<string,any> = {
+  deliveryApiKey: {
+    Type: 'AWS::SecretsManager::Secret',
+    Properties: {
+      Description: 'API key passed by the warehouse',
+      Name: 'deliveryApiKey',
+      SecretString:'860e097c-4eef-4bc7-b741-abfd867bbc7b'
+    },
+  },
+}
+
 export const handler = async (event: APIGatewayProxyEvent) => {
-  try {
-    await Authorization.apiKeyAuth(event);
-  } catch (error) {
-    console.log(error);
-    return formatJSONResponse({
-      statusCode: 401,
-      body: { message: 'API key auth failed' },
-    });
-  }
 
   try {
+    
+    const authToken = event.headers.Authorization;
+
+    const secretString = secrets.warehouseApiKey.Properties.SecretString;
+
+    if(authToken !== secretString){
+      return formatJSONResponse({
+        statusCode: 401,
+        body: { message: 'API key auth failed' },
+      });
+    }
     
     const ordersTable = process.env.ordersTable;
 
@@ -31,7 +43,7 @@ export const handler = async (event: APIGatewayProxyEvent) => {
 
     const updatedOrder = {
       ...order,
-      status:'packed',
+      status:'delivered',
       dateUpdated: Date.now()
     }
 
@@ -40,9 +52,9 @@ export const handler = async (event: APIGatewayProxyEvent) => {
       data:updatedOrder
     })
 
-    return formatJSONResponse({ body: { message: 'order packed' } });
+    return formatJSONResponse({ body:{message:'order delivered'} });
   } catch (error) {
     console.error(error);
-    return formatJSONResponse({ statusCode: 500, body: error.message });
+    return formatJSONResponse({ statusCode:500,body:error.message });
   }
 };

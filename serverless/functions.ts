@@ -20,16 +20,11 @@ interface Authorizer {
     'Fn::GetAtt': string[];
   };
 }
+
 const authorizer: Authorizer = {
   name: 'authorizer',
   type: 'COGNITO_USER_POOLS',
   arn: { 'Fn::GetAtt': ['CognitoUserPool', 'Arn'] },
-};
-
-const iamGetSecret = {
-  Effect: 'Allow',
-  Action: ['secretsmanager:GetSecretValue'],
-  Resource: '*',
 };
 
 const functions: AWS['functions'] = {
@@ -41,7 +36,6 @@ const functions: AWS['functions'] = {
           method: 'get',
           path: 'products',
           cors: corsSettings,
-          // authorizer,
         },
       },
     ],
@@ -54,7 +48,6 @@ const functions: AWS['functions'] = {
           method: 'get',
           path: 'product/{productId}',
           cors: corsSettings,
-          // authorizer,
         },
       },
     ],
@@ -88,7 +81,7 @@ const functions: AWS['functions'] = {
     iamRoleStatements: [
       {
         Effect: 'Allow',
-        Action: 'events:PutEvents',
+        Action: ['events:PutEvents'],
         Resource:
           'arn:aws:events:${self:provider.region}:${aws:accountId}:event-bus/${self:custom.eventBridgeBusName}',
       },
@@ -108,7 +101,13 @@ const functions: AWS['functions'] = {
     ],
     //@ts-expect-error
     iamRoleStatementsInherit: true,
-    iamRoleStatements: [iamGetSecret],
+    iamRoleStatements: [
+      {
+        Effect: 'Allow',
+        Action: ['ses:sendEmail'],
+        Resource: '*',
+      },
+    ],
   },
   ebOrderPlacedPicklist: {
     handler: 'src/functions/ebOrderPlacedPicklist/index.handler',
@@ -117,14 +116,11 @@ const functions: AWS['functions'] = {
         eventBridge: {
           eventBus: '${self:custom.eventBridgeBusName}',
           pattern: {
-            source: ['order.picked'],
+            source: ['order.placed'],
           },
         },
       },
     ],
-    //@ts-expect-error
-    // iamRoleStatementsInherit: true,
-    iamRoleStatements: [iamGetSecret],
   },
   packingComplete: {
     handler: 'src/functions/packingComplete/index.handler',
@@ -132,15 +128,11 @@ const functions: AWS['functions'] = {
       {
         http: {
           method: 'post',
-          path: 'orders/{orderId}',
+          path: 'orderpacked/{orderId}',
           cors: corsSettings,
-          // authorizer,
         },
       },
     ],
-    //@ts-expect-error
-    iamRoleStatementsInherit: true,
-    iamRoleStatements: [iamGetSecret],
   },
   ebOrderPackedNotification: {
     handler: 'src/functions/ebOrderPackedNotification/index.handler',
@@ -156,7 +148,60 @@ const functions: AWS['functions'] = {
     ],
     //@ts-expect-error
     iamRoleStatementsInherit: true,
-    iamRoleStatements: [iamGetSecret],
+    iamRoleStatements: [
+      {
+        Effect: 'Allow',
+        Action: ['ses:sendEmail'],
+        Resource: '*',
+      },
+    ],  
+  },
+  ebOrderPackedRequestDelivery: {
+    handler: 'src/functions/ebOrderPackedRequestDelivery/index.handler',
+    events: [
+      {
+        eventBridge: {
+          eventBus: '${self:custom.eventBridgeBusName}',
+          pattern: {
+            source: ['order.packed'],
+          },
+        },
+      },
+    ],
+  },
+  deliveryComplete: {
+    handler: 'src/functions/deliveryComplete/index.handler',
+    events: [
+      {
+        http: {
+          method: 'post',
+          path: 'orderdelivered/{orderId}',
+          cors: corsSettings,
+        },
+      },
+    ],
+  },
+  ebOrderDeliveredNotification: {
+    handler: 'src/functions/ebOrderDeliveredNotification/index.handler',
+    events: [
+      {
+        eventBridge: {
+          eventBus: '${self:custom.eventBridgeBusName}',
+          pattern: {
+            source: ['order.delivered'],
+          },
+        },
+      },
+    ],
+    //@ts-expect-error
+    iamRoleStatementsInherit: true,
+    iamRoleStatements: [
+      {
+        Effect: 'Allow',
+        Action: ['ses:sendEmail'],
+        Resource: '*',
+      },
+    ],  
   },
 };
 

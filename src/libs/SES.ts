@@ -6,12 +6,10 @@ export const sendEmail = async ({
   email,
   text,
   subject,
-  html,
 }: {
   email: string;
   text: string;
   subject: string;
-  html?: string;
 }) => {
   const params: SendEmailCommandInput = {
     Source: 'ebrahim.abdelaziz@adzily.com',
@@ -32,16 +30,10 @@ export const sendEmail = async ({
     },
   };
 
-  if (html) {
-    params.Message.Body.Html = {
-      Data: html,
-      Charset: 'UTF-8',
-    };
-  }
-
   const command = new SendEmailCommand(params);
 
   const res = await sesClient.send(command);
+  
   return res.MessageId;
 };
 

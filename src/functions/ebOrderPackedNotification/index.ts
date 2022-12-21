@@ -23,7 +23,7 @@ export const handler = async (event: EventBridgeEvent<string, OrderRecord>) => {
     const itemDetails = await Promise.all(itemPromises);
 
     await SES.sendEmail({
-      email: details.userEmail,
+      email: "ebrahim.abdelaziz@adzily.com",
       subject: 'Your order has been packed',
       text: `we've packed your order at the warehouse .it will be delivered soon
       

@@ -2,14 +2,6 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 // import Secrets from "./secrets";
 
 const secrets:Record<string,any> = {
-  // warhouseApiKey : {
-  //   Type:'AWS::SecretsManager::Secret',
-  //   Properties: { 
-  //     Description:'API key needed to call the warehouse',
-  //     Name:'warhouseApiKey',
-  //     SecretString:'560e097c-4eef-4bc7-b741-abfd648bbc7b'
-  //   },
-  // },
   orderpackeApiKey : {
     Type:'AWS::SecretsManager::Secret',
     Properties: { 
@@ -27,10 +19,6 @@ const apiKeyAuth = async (event :APIGatewayProxyEvent) => {
   }
 
   const authToken = event.headers.Authorization;
-  
-  if(!authToken){
-    throw Error('No API key found for this path!')
-  }
 
   const secretString = secrets.orderpackeApiKey.Properties.SecretString;
 
