@@ -26,6 +26,12 @@ const authorizer: Authorizer = {
   arn: { 'Fn::GetAtt': ['CognitoUserPool', 'Arn'] },
 };
 
+const iamGetSecret = {
+  Effect: 'Allow',
+  Action: ['secretsmanager:GetSecretValue'],
+  Resource: '*',
+};
+
 const functions: AWS['functions'] = {
   getProducts: {
     handler: 'src/functions/getProducts/index.handler',
@@ -86,7 +92,7 @@ const functions: AWS['functions'] = {
         Resource:
           'arn:aws:events:${self:provider.region}:${aws:accountId}:event-bus/${self:custom.eventBridgeBusName}',
       },
-    ]
+    ],
   },
   ebOrderPlacedNotification: {
     handler: 'src/functions/ebOrderPlacedNotification/index.handler',
@@ -102,13 +108,7 @@ const functions: AWS['functions'] = {
     ],
     //@ts-expect-error
     iamRoleStatementsInherit: true,
-    iamRoleStatements: [
-      {
-        Effect: 'Allow',
-        Action: 'ses:sendEmail',
-        Resource: '*',
-      },
-    ],
+    iamRoleStatements: [iamGetSecret],
   },
   ebOrderPlacedPicklist: {
     handler: 'src/functions/ebOrderPlacedPicklist/index.handler',
@@ -124,16 +124,24 @@ const functions: AWS['functions'] = {
     ],
     //@ts-expect-error
     // iamRoleStatementsInherit: true,
-    iamRoleStatements: [
+    iamRoleStatements: [iamGetSecret],
+  },
+  packingComplete: {
+    handler: 'src/functions/packingComplete/index.handler',
+    events: [
       {
-        Effect: 'Allow',
-        Action: ['secretsmanager:GetSecretValue'],
-        Resource: '*',
+        http: {
+          method: 'post',
+          path: 'orders/{orderId}',
+          cors: corsSettings,
+          // authorizer,
+        },
       },
     ],
+    //@ts-expect-error
+    iamRoleStatementsInherit: true,
+    iamRoleStatements: [iamGetSecret],
   },
-
-
 };
 
 export default functions;
